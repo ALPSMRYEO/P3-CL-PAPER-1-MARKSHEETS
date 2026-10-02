@@ -1079,7 +1079,6 @@ function PasswordGate({onUnlock}) {
   const submit = (e) => {
     e.preventDefault();
     if (pw === ACCESS_PASSWORD) {
-      sessionStorage.setItem('p3WritingUnlocked','yes');
       onUnlock();
     } else {
       setError('密码不正确，请重试。');
@@ -1105,7 +1104,7 @@ function PasswordGate({onUnlock}) {
 }
 
 function App() {
-  const [unlocked,setUnlocked] = useState(sessionStorage.getItem('p3WritingUnlocked') === 'yes');
+  const [unlocked,setUnlocked] = useState(false);
   const [revisionStage,setRevisionStage] = useState('一改');
   const [selectedFormClass,setSelectedFormClass] = useState('');
   const [student,setStudent] = useState({class:'',mtl:'',name:''});
