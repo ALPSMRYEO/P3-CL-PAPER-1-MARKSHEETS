@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>雅德小学三年级华文写作</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+@media print {
+  body { background:white; font-size:14pt; }
+  .no-print { display:none !important; }
+  .print-only { display:block !important; }
+  .print-container { border:2px solid #3b82f6; border-radius:16px; padding:42px; margin:20px; box-shadow:none; }
+}
+.print-only { display:none; }
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+body{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+</style>
+</head>
+<body class="bg-yellow-50 text-slate-900 font-sans min-h-screen pb-24 text-base">
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useMemo} = React;
+
+/*
+  IMPORTANT:
+  1) After deploying Code.gs as a Web App, paste the /exec URL into GAS_URL below.
+  2) Replace ACCESS_PASSWORD with the SAME password you use for your P4 Oral app.
+     It is intentionally not copied into this file automatically.
+*/
+const GAS_URL = 'https://script.google.com/macros/s/AKfycby6iiFwZ7-vSCHfXEOdeSsF4BG7KLTqdPlJNukQ53gBurChBnmgh-E9um7mhJDuKR1lig/exec';
+const ACCESS_PASSWORD = 'Alps2026';
+
+const writingRubrics = {
+    "content": {
+        "title": "内容",
+        "max": 7,
+        "items": [
+            {
+                "level": 1,
+                "scores": [
+                    6,
+                    7
+                ],
+                "label": "上（6-7）",
+                "desc": "符合题目要求；内容完整；条理清楚",
+                "feedback": "内容符合题目要求，较完整，条理清楚。"
+            },
+            {
+                "level": 2,
+                "scores": [
+                    3,
+                    4,
+                    5
+                ],
+                "label": "中（3-5）",
+                "desc": "不完全符合题目要求；内容有些缺漏；条理不够清楚",
+                "feedback": "内容基本切题，但仍有一些缺漏，条理可以更清楚。"
+            },
+            {
+                "level": 3,
+                "scores": [
+                    1,
+                    2
+                ],
+                "label": "下（1-2）",
+                "desc": "不符合题目要求；内容严重缺漏；条理不清楚",
+                "feedback": "内容与题目要求仍有距离，缺漏较多，需要把事情写得更完整、更有条理。"
+            }
+        ]
+    },
+    "language": {
+        "title": "表达",
+        "max": 8,
+        "items": [
+            {
+                "level": 1,
+                "scores": [
+                    6,
+                    7,
+                    8
+                ],
+                "label": "上（6-8）",
+                "desc": "表达清楚、连贯；句子通顺、词语正确；汉字/拼音正确或极少错误（1-2个）；段落格式正确、标点正确或极少错误（1-2个）",
+                "feedback": "表达清楚连贯，句子通顺，用词恰当；汉字、拼音、段落格式和标点掌握良好。"
+            },
+            {
+                "level": 2,
+                "scores": [
+                    3,
+                    4,
+                    5
+                ],
+                "label": "中（3-5）",
+                "desc": "表达比较清楚、连贯；多数句子通顺、多数词语正确；汉字/拼音错误不多；段落格式正确、标点错误不多",
+                "feedback": "表达比较清楚连贯，多数句子通顺；注意检查汉字、拼音和标点。"
+            },
+            {
+                "level": 3,
+                "scores": [
+                    1,
+                    2
+                ],
+                "label": "下（1-2）",
+                "desc": "表达不清楚、不连贯；多数句子不通顺、多数词语不正确；汉字/拼音错误较多；段落格式不正确、标点错误较多",
+                "feedback": "表达还不够清楚连贯，句子、词语、汉字/拼音、段落格式和标点需要进一步加强。"
+            }
+        ]
+    }
+};
+const examinersList = [
+    "CHEN JINGJING",
+    "CHIA AI TIAN",
+    "CHONG SHI YAN",
+    "DONG JINGJING",
+    "FOO SIEW YEE",
+    "HAO XIAOXING",
+    "HU YULAN",
+    "HUANG YAO TIAN",
+    "LIM LEE CHOON",
+    "LIN YUSHI",
+    "PENG YUANZHEN",
+    "POH YEU PEI",
+    "SU WAN JU",
+    "TAN HUI JUAI",
+    "TEY SIEW LENG",
+    "YEO WEE KIANG",
+    "ZHENG LIDAN"
+];
+const p3Roster = [
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-E",
+        "name": "AARYA RAJ NAIDU"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-E",
+        "name": "TRISTAN CHAN YEJUN"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-E",
+        "name": "WAH CHEN YAN"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-E",
+        "name": "XU ZHANGNIAN NATHAN"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-E",
+        "name": "YEO SI YING ELEANOR"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-H",
+        "name": "ANDERS SHEM"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-H",
+        "name": "FAITH HENG YU HAN"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-H",
+        "name": "HONG CHUN KAI BENEDICT"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-H",
+        "name": "KAYSON WONG"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-H",
+        "name": "KEARA LEE YU HAN"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-H",
+        "name": "NAOMI TAN XUAN NING"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-H",
+        "name": "OOI YI LING, ELLIE"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-H",
+        "name": "SEE RAY YOUNG"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-H",
+        "name": "SNG YING TING"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-H",
+        "name": "TANG YIYANG"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-H",
+        "name": "TOH YU HUI"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-H",
+        "name": "TONG ZHI JIE"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-H",
+        "name": "ZHANG YUE"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-I",
+        "name": "CHEN WENXIN, RAYLENE"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-I",
+        "name": "GOH KYE ZEN"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-I",
+        "name": "JIANG LEHE"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-I",
+        "name": "YUIKO TAN"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-O",
+        "name": "ELLIE TIEW TING YING"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-O",
+        "name": "NATALIE TIEW TING EN"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-O",
+        "name": "SIM ZHEYU"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-O",
+        "name": "WONG SHI YU, RYAN (HUANG SHIYU)"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-RS",
+        "name": "CHIA KENG HONG"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-RS",
+        "name": "DAI QIAN"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-RS",
+        "name": "EMMA WANG MENGMENG"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-RS",
+        "name": "GLEN BAO YIFEI"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-RS",
+        "name": "HON DING XI SOPHIA"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-RS",
+        "name": "KWA RUI YANG SHANE"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-RS",
+        "name": "LIM YU XIN, ARABELLE"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-RS",
+        "name": "LUO YI KAI"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-RS",
+        "name": "SEAH JIE FENG"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-RS",
+        "name": "SEAH YUXUAN"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-RS",
+        "name": "SOPHIE TAN EE LYN"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-RS",
+        "name": "WANG HONGREN"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-RS",
+        "name": "WONG XINYA MIRANDA"
+    },
+    {
+        "mtClass": "3CL1",
+        "formClass": "P3-RS",
+        "name": "ZHOU QINGTONG"
+    },
+    {
+        "mtClass": "3CL2",
+        "formClass": "P3-E",
+        "name": "ALENCIA SIM WEN XUAN"
+    },
+    {
+        "mtClass": "3CL2",
+        "formClass": "P3-E",
+        "name": "HO YU SUM EMMA"
+    },
+    {
+        "mtClass": "3CL2",
+        "formClass": "P3-E",
+        "name": "LEE SHIWEI CONNOR"
+    },
+    {
+        "mtClass": "3CL2",
+        "formClass": "P3-E",
+        "name": "LUCAS GENG LE KANG"
+    },
+    {
+        "mtClass": "3CL2",
+        "formClass": "P3-E",
+        "name": "MAXIMILIAN BASYARUDIN"
+    },
+    {
+        "mtClass": "3CL2",
+        "formClass": "P3-E",
+        "name": "TEO KAI KIT HATTEN"
+    },
+    {
+        "mtClass": "3CL2",
+        "formClass": "P3-H",
+        "name": "ANSON SIM JUN AN"
+    },
+    {
+        "mtClass": "3CL2",
+        "formClass": "P3-H",
+        "name": "CHAN YA NUO"
+    },
+    {
+        "mtClass": "3CL2",
+        "formClass": "P3-H",
+        "name": "CHELSEA OLIVIA PHAM"
+    },
+    {
+        "mtClass": "3CL2",
+        "formClass": "P3-H",
+        "name": "CHENG JUN DE NOAH"
+    },
+    {
+        "mtClass": "3CL2",
+        "formClass": "P3-H",
+        "name": "KIM E SUE"
+    },
+    {
+        "mtClass": "3CL2",
+        "formClass": "P3-H",
+        "name": "LILY ZHANG YI RU"
+    },
+    {
+        "mtClass": "3CL2",
+        "formClass": "P3-H",
+        "name": "MARKAS TAN YI AN"
+    },
+    {
+        "mtClass": "3CL2",
+        "formClass": "P3-H",
+        "name": "POH HONG KAI RAYNER"
+    },
+    {
+        "mtClass": "3CL2",
+        "formClass": "P3-H",
+        "name": "RYAN AGARWAL"
+    },
+    {
+        "mtClass": "3CL2",
+        "formClass": "P3-H",
+        "name": "TIMOTHY LEO CHEW"
+    },
+    {
+        "mtClass": "3CL2",
+        "formClass": "P3-I",
+        "name": "HSUEH JUN-YUAN"
+    },
+    {
+        "mtClass": "3CL2",
+        "formClass": "P3-I",
+        "name": "MIKAEL DOMINICK LIM"
+    },
+    {
+        "mtClass": "3CL2",
+        "formClass": "P3-O",
+        "name": "ISABELLA WIN CHUA"
+    },
+    {
+        "mtClass": "3CL2",
+        "formClass": "P3-RS",
+        "name": "ALYSSA ANG YU XIN"
+    },
+    {
+        "mtClass": "3CL2",
+        "formClass": "P3-RS",
+        "name": "ANG ZI QIAO ARIEL"
+    },
+    {
+        "mtClass": "3CL2",
+        "formClass": "P3-RS",
+        "name": "BANG JIAXU"
+    },
+    {
+        "mtClass": "3CL2",
+        "formClass": "P3-RS",
+        "name": "CHEONG YUAN HO"
+    },
+    {
+        "mtClass": "3CL2",
+        "formClass": "P3-RS",
+        "name": "CHONG RUI WEN NADIA"
+    },
+    {
+        "mtClass": "3CL2",
+        "formClass": "P3-RS",
+        "name": "EDEN LIN ENCI"
+    },
+    {
+        "mtClass": "3CL2",
+        "formClass": "P3-RS",
+        "name": "EILA WONG TIN YI"
+    },
+    {
+        "mtClass": "3CL2",
+        "formClass": "P3-RS",
+        "name": "ETHAN WONG YI JUN"
+    },
+    {
+        "mtClass": "3CL2",
+        "formClass": "P3-RS",
+        "name": "FAITH GOH EN QI"
+    },
+    {
+        "mtClass": "3CL2",
+        "formClass": "P3-RS",
+        "name": "GOH YU ZE JOSHUA"
+    },
+    {
+        "mtClass": "3CL2",
+        "formClass": "P3-RS",
+        "name": "KATIE CHONG ZI KEI"
+    },
+    {
+        "mtClass": "3CL2",
+        "formClass": "P3-RS",
+        "name": "NG RUI YI, GARETH"
+    },
+    {
+        "mtClass": "3CL2",
+        "formClass": "P3-RS",
+        "name": "TAN SONG"
+    },
+    {
+        "mtClass": "3CL2",
+        "formClass": "P3-RS",
+        "name": "WEI LIYAN WINSTON"
+    },
+    {
+        "mtClass": "3CL2",
+        "formClass": "P3-RS",
+        "name": "ZHANG XINYUAN"
+    },
+    {
+        "mtClass": "3CL3",
+        "formClass": "P3-E",
+        "name": "EE KAI JING MARK"
+    },
+    {
+        "mtClass": "3CL3",
+        "formClass": "P3-E",
+        "name": "HANNAH FANG WANLIN"
+    },
+    {
+        "mtClass": "3CL3",
+        "formClass": "P3-E",
+        "name": "JULIUS FUM ZHEN KAI"
+    },
+    {
+        "mtClass": "3CL3",
+        "formClass": "P3-E",
+        "name": "PEH AI YUE"
+    },
+    {
+        "mtClass": "3CL3",
+        "formClass": "P3-E",
+        "name": "THAM YU JUN"
+    },
+    {
+        "mtClass": "3CL3",
+        "formClass": "P3-H",
+        "name": "CYRUS CHIN YAN KAI"
+    },
+    {
+        "mtClass": "3CL3",
+        "formClass": "P3-H",
+        "name": "ETHAN WONG REN KAI"
+    },
+    {
+        "mtClass": "3CL3",
+        "formClass": "P3-H",
+        "name": "KAYVEN NG KAI WEN"
+    },
+    {
+        "mtClass": "3CL3",
+        "formClass": "P3-H",
+        "name": "LEE RUI XUAN ALVA"
+    },
+    {
+        "mtClass": "3CL3",
+        "formClass": "P3-H",
+        "name": "LIM MENG YI CHLOE"
+    },
+    {
+        "mtClass": "3CL3",
+        "formClass": "P3-H",
+        "name": "ORIN PETRU FLOROIU"
+    },
+    {
+        "mtClass": "3CL3",
+        "formClass": "P3-H",
+        "name": "SOON ZI RONG"
+    },
+    {
+        "mtClass": "3CL3",
+        "formClass": "P3-I",
+        "name": "AMBER TUN CHENG XIN YU"
+    },
+    {
+        "mtClass": "3CL3",
+        "formClass": "P3-I",
+        "name": "LIM JING EN, LUCAS"
+    },
+    {
+        "mtClass": "3CL3",
+        "formClass": "P3-I",
+        "name": "LIN SHI KAI"
+    },
+    {
+        "mtClass": "3CL3",
+        "formClass": "P3-I",
+        "name": "MICAH CHAN"
+    },
+    {
+        "mtClass": "3CL3",
+        "formClass": "P3-I",
+        "name": "ONG ZHI EN"
+    },
+    {
+        "mtClass": "3CL3",
+        "formClass": "P3-I",
+        "name": "SUNYA CHNG KAI EN"
+    },
+    {
+        "mtClass": "3CL3",
+        "formClass": "P3-I",
+        "name": "TEE JIA EN ZANDREA"
+    },
+    {
+        "mtClass": "3CL3",
+        "formClass": "P3-I",
+        "name": "THAM YU HAO"
+    },
+    {
+        "mtClass": "3CL3",
+        "formClass": "P3-O",
+        "name": "ASAPH SIU EN CI"
+    },
+    {
+        "mtClass": "3CL3",
+        "formClass": "P3-O",
+        "name": "CAIUS CHENG HENG KAI"
+    },
+    {
+        "mtClass": "3CL3",
+        "formClass": "P3-O",
+        "name": "LIANG JINRAN"
+    },
+    {
+        "mtClass": "3CL3",
+        "formClass": "P3-O",
+        "name": "OLIVER LEE"
+    },
+    {
+        "mtClass": "3CL3",
+        "formClass": "P3-O",
+        "name": "THAM KAH LOK"
+    },
+    {
+        "mtClass": "3CL3",
+        "formClass": "P3-O",
+        "name": "YEO YU SHUN"
+    },
+    {
+        "mtClass": "3CL3",
+        "formClass": "P3-RS",
+        "name": "HORATIO GUO FANQI"
+    },
+    {
+        "mtClass": "3CL3",
+        "formClass": "P3-RS",
+        "name": "JASON CHUA YI LE"
+    },
+    {
+        "mtClass": "3CL3",
+        "formClass": "P3-RS",
+        "name": "KAYLA ISABEL TAN"
+    },
+    {
+        "mtClass": "3CL3",
+        "formClass": "P3-RS",
+        "name": "LAURA AIMEE LAU"
+    },
+    {
+        "mtClass": "3CL3",
+        "formClass": "P3-RS",
+        "name": "LEE XUE RUI AUDEN"
+    },
+    {
+        "mtClass": "3CL3",
+        "formClass": "P3-RS",
+        "name": "NG JIE YU, ASHER"
+    },
+    {
+        "mtClass": "3CL3",
+        "formClass": "P3-RS",
+        "name": "TAN YU XUAN, ELIZABETH"
+    },
+    {
+        "mtClass": "3CL4",
+        "formClass": "P3-E",
+        "name": "CALEB LIU ZHENGWEI"
+    },
+    {
+        "mtClass": "3CL4",
+        "formClass": "P3-E",
+        "name": "DONTIMALLA CHRISTIAN KAI"
+    },
+    {
+        "mtClass": "3CL4",
+        "formClass": "P3-E",
+        "name": "JARED XU JIELE"
+    },
+    {
+        "mtClass": "3CL4",
+        "formClass": "P3-E",
+        "name": "KADDY WONG SHI RU"
+    },
+    {
+        "mtClass": "3CL4",
+        "formClass": "P3-E",
+        "name": "KWAN HO YUN, ISAAC"
+    },
+    {
+        "mtClass": "3CL4",
+        "formClass": "P3-E",
+        "name": "LIM YINGXUAN ELENA"
+    },
+    {
+        "mtClass": "3CL4",
+        "formClass": "P3-E",
+        "name": "RAYDEN CHEN LI XIANG"
+    },
+    {
+        "mtClass": "3CL4",
+        "formClass": "P3-E",
+        "name": "RONAV SINGH"
+    },
+    {
+        "mtClass": "3CL4",
+        "formClass": "P3-E",
+        "name": "SONJA WIYANTO"
+    },
+    {
+        "mtClass": "3CL4",
+        "formClass": "P3-E",
+        "name": "TAN YAN RUI, JOSH"
+    },
+    {
+        "mtClass": "3CL4",
+        "formClass": "P3-H",
+        "name": "CAYZER NG ZI HOI"
+    },
+    {
+        "mtClass": "3CL4",
+        "formClass": "P3-H",
+        "name": "FENG JIANHENG ALEX"
+    },
+    {
+        "mtClass": "3CL4",
+        "formClass": "P3-H",
+        "name": "GOH SHI JIE HAILEY"
+    },
+    {
+        "mtClass": "3CL4",
+        "formClass": "P3-H",
+        "name": "SEE KAI TING ASHLEY"
+    },
+    {
+        "mtClass": "3CL4",
+        "formClass": "P3-H",
+        "name": "TONG YI YAN CASSANDRA"
+    },
+    {
+        "mtClass": "3CL4",
+        "formClass": "P3-I",
+        "name": "ABIGAIL TOW MIN"
+    },
+    {
+        "mtClass": "3CL4",
+        "formClass": "P3-I",
+        "name": "CARIS CHUA KAI EN"
+    },
+    {
+        "mtClass": "3CL4",
+        "formClass": "P3-I",
+        "name": "CHAYSE CHUA JIE EN"
+    },
+    {
+        "mtClass": "3CL4",
+        "formClass": "P3-I",
+        "name": "CHUA JIN TIAN, DOMINIC"
+    },
+    {
+        "mtClass": "3CL4",
+        "formClass": "P3-I",
+        "name": "DION JAMES ASKEW"
+    },
+    {
+        "mtClass": "3CL4",
+        "formClass": "P3-I",
+        "name": "ELI LIN YI KAI"
+    },
+    {
+        "mtClass": "3CL4",
+        "formClass": "P3-I",
+        "name": "FREDRIC SEOW ZI JUN"
+    },
+    {
+        "mtClass": "3CL4",
+        "formClass": "P3-I",
+        "name": "LOH KAI JIE, JAYDEN"
+    },
+    {
+        "mtClass": "3CL4",
+        "formClass": "P3-I",
+        "name": "SKYLER KEIRA NERUDA"
+    },
+    {
+        "mtClass": "3CL4",
+        "formClass": "P3-O",
+        "name": "AARON JOSHUA ANG"
+    },
+    {
+        "mtClass": "3CL4",
+        "formClass": "P3-O",
+        "name": "CHRISTINE FENG KEXING"
+    },
+    {
+        "mtClass": "3CL4",
+        "formClass": "P3-O",
+        "name": "HANNA LEE HUI WEN"
+    },
+    {
+        "mtClass": "3CL4",
+        "formClass": "P3-O",
+        "name": "HONG ZAN XIANG CALEB"
+    },
+    {
+        "mtClass": "3CL4",
+        "formClass": "P3-O",
+        "name": "ISAAC OH YI EN"
+    },
+    {
+        "mtClass": "3CL4",
+        "formClass": "P3-O",
+        "name": "LEE WEN YI QUINTA"
+    },
+    {
+        "mtClass": "3CL4",
+        "formClass": "P3-O",
+        "name": "LOH YU ZHENG IAN"
+    },
+    {
+        "mtClass": "3CL4",
+        "formClass": "P3-O",
+        "name": "MAKO TEO"
+    },
+    {
+        "mtClass": "3CL4",
+        "formClass": "P3-O",
+        "name": "YEO QI ZHI"
+    },
+    {
+        "mtClass": "3CL4",
+        "formClass": "P3-RS",
+        "name": "SIAW LE EN JOSEPH"
+    },
+    {
+        "mtClass": "3CL4",
+        "formClass": "P3-H",
+        "name": "KENT YAMAMOTO"
+    },
+    {
+        "mtClass": "3CL5",
+        "formClass": "P3-E",
+        "name": "ASHER TAN ZHENG YU"
+    },
+    {
+        "mtClass": "3CL5",
+        "formClass": "P3-E",
+        "name": "CHAN HONG RUI, ZANDER"
+    },
+    {
+        "mtClass": "3CL5",
+        "formClass": "P3-E",
+        "name": "CHNG RU YI WENDY"
+    },
+    {
+        "mtClass": "3CL5",
+        "formClass": "P3-E",
+        "name": "KAYLEA LOW KAI LE"
+    },
+    {
+        "mtClass": "3CL5",
+        "formClass": "P3-E",
+        "name": "KOH ATARA"
+    },
+    {
+        "mtClass": "3CL5",
+        "formClass": "P3-E",
+        "name": "LEE DIN HERNG"
+    },
+    {
+        "mtClass": "3CL5",
+        "formClass": "P3-E",
+        "name": "MAXX POONTALE"
+    },
+    {
+        "mtClass": "3CL5",
+        "formClass": "P3-E",
+        "name": "ZOE HO KAI-ANNE"
+    },
+    {
+        "mtClass": "3CL5",
+        "formClass": "P3-H",
+        "name": "JOSHUA WAN ZHENG WEI"
+    },
+    {
+        "mtClass": "3CL5",
+        "formClass": "P3-I",
+        "name": "JAMES KANG"
+    },
+    {
+        "mtClass": "3CL5",
+        "formClass": "P3-I",
+        "name": "KHOR ZHE KAI"
+    },
+    {
+        "mtClass": "3CL5",
+        "formClass": "P3-I",
+        "name": "LOW DING LE ZANE"
+    },
+    {
+        "mtClass": "3CL5",
+        "formClass": "P3-I",
+        "name": "LUKE CHONG FOOK YEOW"
+    },
+    {
+        "mtClass": "3CL5",
+        "formClass": "P3-I",
+        "name": "SOON NGUYEN VU THANH"
+    },
+    {
+        "mtClass": "3CL5",
+        "formClass": "P3-O",
+        "name": "CHAN XIAN RUI JAIRUS"
+    },
+    {
+        "mtClass": "3CL5",
+        "formClass": "P3-O",
+        "name": "CHAN YUN YAN CLARA"
+    },
+    {
+        "mtClass": "3CL5",
+        "formClass": "P3-O",
+        "name": "CHONG RUI KAI, ZACHARY"
+    },
+    {
+        "mtClass": "3CL5",
+        "formClass": "P3-O",
+        "name": "EITAN JAMES AW YONG XI"
+    },
+    {
+        "mtClass": "3CL5",
+        "formClass": "P3-O",
+        "name": "ENANUEL CHANG JIA CHE"
+    },
+    {
+        "mtClass": "3CL5",
+        "formClass": "P3-O",
+        "name": "SONIA SUSANTI POH HAI TANG"
+    },
+    {
+        "mtClass": "3CL5",
+        "formClass": "P3-O",
+        "name": "TAN WEI LIN JADE"
+    },
+    {
+        "mtClass": "3CL5",
+        "formClass": "P3-O",
+        "name": "YAM SHU YUN, ALYSSA"
+    },
+    {
+        "mtClass": "3CL5",
+        "formClass": "P3-O",
+        "name": "YONG BO WEN ALEXANDER"
+    },
+    {
+        "mtClass": "3CL5",
+        "formClass": "P3-O",
+        "name": "YONG ZHI BUO"
+    },
+    {
+        "mtClass": "3CL5",
+        "formClass": "P3-RS",
+        "name": "KHONG BYNN"
+    },
+    {
+        "mtClass": "3CL5",
+        "formClass": "P3-RS",
+        "name": "RAPHAEL TOH JIN HONG"
+    },
+    {
+        "mtClass": "3CL6",
+        "formClass": "P3-H",
+        "name": "ASHER CHRIS KU"
+    },
+    {
+        "mtClass": "3CL6",
+        "formClass": "P3-I",
+        "name": "CHARLOTTE EMPERADO ONG RUO YI"
+    },
+    {
+        "mtClass": "3CL6",
+        "formClass": "P3-I",
+        "name": "GOH ZHE RUI KAISER"
+    },
+    {
+        "mtClass": "3CL6",
+        "formClass": "P3-I",
+        "name": "LEE JIA EN AVRIL"
+    },
+    {
+        "mtClass": "3CL6",
+        "formClass": "P3-I",
+        "name": "MARIANO LUCIA NOELLE AGUIL"
+    },
+    {
+        "mtClass": "3CL6",
+        "formClass": "P3-I",
+        "name": "MATT POONTALE"
+    },
+    {
+        "mtClass": "3CL6",
+        "formClass": "P3-I",
+        "name": "TOH YAN TAK"
+    },
+    {
+        "mtClass": "3CL6",
+        "formClass": "P3-I",
+        "name": "YVES TAN YI ZHE"
+    },
+    {
+        "mtClass": "3CL6",
+        "formClass": "P3-O",
+        "name": "ALYANNAH TAN PEI YAN"
+    },
+    {
+        "mtClass": "3CL6",
+        "formClass": "P3-O",
+        "name": "LEE KE JIE GARRETH"
+    },
+    {
+        "mtClass": "3CL6",
+        "formClass": "P3-O",
+        "name": "NG WAN RU, CARTIER"
+    },
+    {
+        "mtClass": "3CL6",
+        "formClass": "P3-O",
+        "name": "TAN YONG LE JOACHIM"
+    }
+];
+
+const getBandLevel = (category, score) => {
+  const n = Number(score);
+  const item = writingRubrics[category].items.find(x => x.scores.includes(n));
+  return item ? item.level : null;
+};
+
+function PasswordGate({onUnlock}) {
+  const [pw,setPw] = useState('');
+  const [error,setError] = useState('');
+  const submit = (e) => {
+    e.preventDefault();
+    if (pw === ACCESS_PASSWORD) {
+      sessionStorage.setItem('p3WritingUnlocked','yes');
+      onUnlock();
+    } else {
+      setError('密码不正确，请重试。');
+      setPw('');
+    }
+  };
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
+      <form onSubmit={submit} className="w-full max-w-md bg-white rounded-3xl shadow-xl border border-slate-200 p-8">
+        <div className="text-center mb-7">
+          <div className="text-5xl mb-3">🔒</div>
+          <h1 className="text-2xl font-black text-slate-900">雅德小学三年级华文写作</h1>
+          <p className="text-slate-500 mt-2">请输入密码进入评分系统</p>
+        </div>
+        <input type="password" value={pw} onChange={e=>setPw(e.target.value)} autoFocus
+          className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 text-lg outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+          placeholder="密码" />
+        {error && <div className="text-red-600 font-bold text-sm mt-3">{error}</div>}
+        <button className="w-full mt-5 bg-blue-600 hover:bg-blue-700 text-white font-black py-3 rounded-xl shadow">进入系统</button>
+      </form>
+    </div>
+  );
+}
+
+function App() {
+  const [unlocked,setUnlocked] = useState(sessionStorage.getItem('p3WritingUnlocked') === 'yes');
+  const [revisionStage,setRevisionStage] = useState('一改');
+  const [selectedFormClass,setSelectedFormClass] = useState('');
+  const [student,setStudent] = useState({class:'',mtl:'',name:''});
+  const [scores,setScores] = useState({content:'',language:''});
+  const [scoreTouched,setScoreTouched] = useState({content:false,language:false});
+  const [selections,setSelections] = useState({content:null,language:null});
+  const [currentExaminer,setCurrentExaminer] = useState(localStorage.getItem('p3WritingMarker') || '');
+  const [feedbackText,setFeedbackText] = useState('');
+  const [lastAutoText,setLastAutoText] = useState('');
+  const [submitStatus,setSubmitStatus] = useState('idle');
+  const [dialog,setDialog] = useState({isOpen:false,title:'',message:'',type:'alert',onConfirm:null,isSuccess:false});
+  const [history,setHistory] = useState({});
+
+  const maxContent=7, maxLanguage=8, maxTotal=15;
+  const contentTotal = scores.content === '' ? 0 : Number(scores.content);
+  const languageTotal = scores.language === '' ? 0 : Number(scores.language);
+  const grandTotal = contentTotal + languageTotal;
+
+  const availableFormClasses = useMemo(() =>
+    Array.from(new Set(p3Roster.map(s=>s.formClass))).sort(), []);
+
+  const availableMTClasses = useMemo(() => {
+    if(!selectedFormClass) return [];
+    return Array.from(new Set(p3Roster.filter(s=>s.formClass===selectedFormClass).map(s=>s.mtClass))).sort();
+  },[selectedFormClass]);
+
+  const filteredStudents = useMemo(() => {
+    if(!selectedFormClass || !student.mtl) return [];
+    return p3Roster.filter(s=>s.formClass===selectedFormClass && s.mtClass===student.mtl);
+  },[selectedFormClass,student.mtl]);
+
+  const studentKey = student.name ? `${student.class}|${student.mtl}|${student.name}` : '';
+  const currentHistory = history[studentKey] || {};
+  const record1 = currentHistory['一改'];
+  const record2 = currentHistory['二改'];
+
+  const loadHistory = async (s) => {
+    if(!s?.name || !GAS_URL.startsWith('https://script.google.com/')) return;
+    try {
+      const u = `${GAS_URL}?action=history&formClass=${encodeURIComponent(s.class)}&mtClass=${encodeURIComponent(s.mtl)}&studentName=${encodeURIComponent(s.name)}&_=${Date.now()}`;
+      const r = await fetch(u,{cache:'no-store'});
+      const d = await r.json();
+      if(d && d.ok) {
+        setHistory(prev=>({...prev,[`${s.class}|${s.mtl}|${s.name}`]:d.history||{}}));
+      }
+    } catch(e) {}
+  };
+
+  const handleFormClassChange = e => {
+    const fc=e.target.value;
+    setSelectedFormClass(fc);
+    setStudent({class:fc,mtl:'',name:''});
+    clearScores();
+  };
+  const handleMTClassChange = e => {
+    setStudent({class:selectedFormClass,mtl:e.target.value,name:''});
+    clearScores();
+  };
+  const handleStudentSelect = e => {
+    const name=e.target.value;
+    const found=p3Roster.find(s=>s.formClass===selectedFormClass && s.mtClass===student.mtl && s.name===name);
+    const next = found ? {class:found.formClass,mtl:found.mtClass,name:found.name} : {class:selectedFormClass,mtl:student.mtl,name:''};
+    setStudent(next); clearScores(); if(found) loadHistory(next);
+  };
+
+  const clearScores = () => {
+    setScores({content:'',language:''});
+    setScoreTouched({content:false,language:false});
+    setSelections({content:null,language:null});
+    setFeedbackText('');
+    setLastAutoText('');
+  };
+
+  const handleSelect = (category,itemIndex,score) => {
+    setSelections(prev=>({...prev,[category]:itemIndex}));
+    setScores(prev=>({...prev,[category]:score}));
+    setScoreTouched(prev=>({...prev,[category]:true}));
+  };
+
+  const handleScoreChange = (category,value) => {
+    if(value==='') {
+      setScores(prev=>({...prev,[category]:''}));
+      setScoreTouched(prev=>({...prev,[category]:false}));
+      setSelections(prev=>({...prev,[category]:null}));
+      return;
+    }
+    let n=Number(value); if(!Number.isFinite(n)) return;
+    n=Math.max(0,Math.min(writingRubrics[category].max,n));
+    setScores(prev=>({...prev,[category]:n}));
+    setScoreTouched(prev=>({...prev,[category]:true}));
+    const idx=writingRubrics[category].items.findIndex(x=>x.scores.includes(n));
+    setSelections(prev=>({...prev,[category]:idx>=0?idx:null}));
+  };
+
+  const getFeedback = (category,score) => {
+    const item=writingRubrics[category].items.find(x=>x.scores.includes(Number(score)));
+    return item?.feedback || '';
+  };
+  const generatedFeedback = useMemo(() => {
+    const parts=[];
+    if(scoreTouched.content && getFeedback('content',scores.content)) parts.push(`【内容】\n${getFeedback('content',scores.content)}`);
+    if(scoreTouched.language && getFeedback('language',scores.language)) parts.push(`【表达】\n${getFeedback('language',scores.language)}`);
+    return parts.join('\n\n');
+  },[scores.content,scores.language,scoreTouched.content,scoreTouched.language]);
+
+  useEffect(()=>{
+    setFeedbackText(current => {
+      if(!current || current===lastAutoText) return generatedFeedback;
+      if(lastAutoText && current.includes(lastAutoText)) return current.replace(lastAutoText,generatedFeedback);
+      return current;
+    });
+    setLastAutoText(generatedFeedback);
+  },[generatedFeedback]);
+
+  const handleExaminerChange=e=>{
+    setCurrentExaminer(e.target.value);
+    localStorage.setItem('p3WritingMarker',e.target.value);
+  };
+
+  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  const waitForStatus=async requestId=>{
+    for(let i=0;i<30;i++) {
+      const r=await fetch(`${GAS_URL}?action=status&requestId=${encodeURIComponent(requestId)}&_=${Date.now()}`,{cache:'no-store'});
+      const d=await r.json();
+      if(d && d.pending!==true) return d;
+      await sleep(500);
+    }
+    throw new Error('Unable to confirm submission');
+  };
+
+  const handleSubmitGAS=async(forceDuplicate=false)=>{
+    if(!GAS_URL.startsWith('https://script.google.com/')) {
+      setDialog({isOpen:true,title:'尚未连接 Google Sheet',message:'请先部署 Code.gs，然后把 Web App 的 /exec URL 贴入 index.html 的 GAS_URL。',type:'alert'});
+      return;
+    }
+    if(!student.class || !student.mtl || !student.name || !currentExaminer) {
+      setDialog({isOpen:true,title:'⚠️ 资料不完整',message:'请先选择级任班、母语班、学生和评卷老师。',type:'alert'});
+      return;
+    }
+    if(!scoreTouched.content || !scoreTouched.language || scores.content==='' || scores.language==='') {
+      setDialog({isOpen:true,title:'⚠️ 资料不完整',message:'请完成内容和表达的评分后再提交成绩。',type:'alert'});
+      return;
+    }
+    setSubmitStatus('loading');
+    const requestId=`p3w_${Date.now()}_${Math.random().toString(36).slice(2,10)}`;
+    const payload={
+      requestId, level:'P3', assessment:'EYE CL Paper 1',
+      formClass:student.class, mtClass:student.mtl, studentName:student.name,
+      revisionStage, marker:currentExaminer,
+      contentScore:Number(scores.content), languageScore:Number(scores.language),
+      totalScore:grandTotal, maxTotal:15, feedback:feedbackText,
+      contentBand:getBandLevel('content',scores.content),
+      languageBand:getBandLevel('language',scores.language),
+      timestamp:new Date().toLocaleString('zh-CN',{hour12:false}),
+      forceDuplicate
+    };
+    try {
+      await fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});
+      const result=await waitForStatus(requestId);
+      setSubmitStatus('idle');
+      if(result?.duplicate===true && result?.saved===false) {
+        const p=result.previous||{};
+        setDialog({
+          isOpen:true,title:'⚠️ 成绩已经提交',
+          message:`学生：${student.name}\n\n批改阶段：${revisionStage}\n\n这名学生的${revisionStage}成绩已经提交过。\n\n上一次评卷老师：${p.marker||'未记录'}\n\n上一次总分：${p.totalScore??'未记录'}分\n\n是否仍要提交这一次的成绩？`,
+          type:'confirm',confirmText:'继续提交',cancelText:'取消',onConfirm:()=>handleSubmitGAS(true)
+        });
+        return;
+      }
+      if(!result || result.ok!==true || result.saved!==true) throw new Error(result?.error||'Not confirmed');
+      setHistory(prev=>({
+        ...prev,[studentKey]:{...(prev[studentKey]||{}),[revisionStage]:{score:grandTotal,content:contentTotal,language:languageTotal,marker:currentExaminer}}
+      }));
+      setDialog({isOpen:true,title:'✅ 提交成功！',message:`学生 ${student.name} 的 (${revisionStage}) 写作成绩已保存。\n评卷老师：${currentExaminer}`,type:'alert',isSuccess:true});
+    } catch(e) {
+      setSubmitStatus('idle');
+      setDialog({isOpen:true,title:'提交状态未确认',message:'系统暂时无法确认这次提交的状态。请先查看 Google Sheet 是否已有新记录，再决定是否重试，以免重复提交。',type:'alert'});
+    }
+  };
+
+  const handlePrint=()=>{
+    const old=document.title;
+    document.title=student.name?`${student.class}_${student.name}_三年级华文写作反馈_${revisionStage}`:'三年级华文写作反馈单';
+    window.print(); setTimeout(()=>document.title=old,500);
+  };
+
+  const renderRubricRow=(categoryKey,rubricObj)=>(
+    <div className="mb-10 bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-slate-200 no-print">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <h3 className="font-bold text-xl md:text-2xl text-slate-800">{rubricObj.title} <span className="text-slate-400 text-lg font-medium">({rubricObj.max}分)</span></h3>
+        <div className="flex items-center space-x-3 bg-blue-50 px-4 py-2 rounded-xl border border-blue-200">
+          <span className="font-bold text-blue-900">得分:</span>
+          <input type="number" min="0" max={rubricObj.max} value={scores[categoryKey]} onChange={e=>handleScoreChange(categoryKey,e.target.value)}
+            className="w-16 text-center font-black text-2xl text-blue-700 bg-transparent border-b-2 border-blue-300 outline-none"/>
+          <span className="text-slate-500">/{rubricObj.max}</span>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {rubricObj.items.map((item,index)=>{
+          const selected=selections[categoryKey]===index;
+          return <div key={index} className={`rounded-xl p-4 border-2 ${selected?'border-blue-600 bg-blue-50 ring-4 ring-blue-100':'border-slate-200'}`}>
+            <div className="flex flex-wrap gap-2 mb-3">
+              {item.scores.map(s=><button key={s} onClick={()=>handleSelect(categoryKey,index,s)}
+                className={`w-10 h-10 rounded-lg font-black ${selected && Number(scores[categoryKey])===s?'bg-blue-600 text-white':'bg-white border-2 border-slate-300 text-slate-700 hover:bg-blue-100'}`}>{s}</button>)}
+            </div>
+            <div className={`font-black text-lg mb-2 ${selected?'text-blue-800':'text-slate-800'}`}>{item.label}</div>
+            <div className="text-sm leading-relaxed text-slate-600">{item.desc}</div>
+          </div>
+        })}
+      </div>
+    </div>
+  );
+
+  if(!unlocked) return <PasswordGate onUnlock={()=>setUnlocked(true)}/>;
+
+  return <div className="max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
+    {dialog.isOpen && <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4 no-print">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden">
+        <div className={`p-9 ${dialog.isSuccess?'bg-green-50 text-center':''}`}>
+          {dialog.isSuccess && <div className="text-6xl mb-4">🎉</div>}
+          <h3 className="font-black text-2xl mb-3">{dialog.title}</h3>
+          <p className="text-lg text-slate-600 whitespace-pre-line">{dialog.message}</p>
+        </div>
+        <div className="p-5 bg-slate-50 flex gap-3">
+          {dialog.type==='confirm' && <button onClick={()=>setDialog({...dialog,isOpen:false})} className="w-full px-6 py-3 font-bold rounded-xl bg-slate-200">{dialog.cancelText||'取消'}</button>}
+          <button onClick={()=>{const a=dialog.onConfirm;setDialog(p=>({...p,isOpen:false,isSuccess:false}));if(a)a();}}
+            className="w-full px-6 py-3 font-black rounded-xl bg-blue-600 text-white">{dialog.type==='confirm'?(dialog.confirmText||'确定'):'我知道了'}</button>
+        </div>
+      </div>
+    </div>}
+
+    <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-xl shadow-md border-b border-slate-200 rounded-b-3xl p-4 lg:p-5 mb-8 no-print">
+      <div className="flex flex-col xl:flex-row justify-between gap-4">
+        <div>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-4">
+            <span className="text-2xl font-black bg-gradient-to-r from-blue-700 to-indigo-700 bg-clip-text text-transparent">雅德小学三年级华文写作</span>
+            <div className="flex bg-white p-1 rounded-xl border border-slate-200 shadow-sm">
+              {['一改','二改'].map(stage=><button key={stage} onClick={()=>setRevisionStage(stage)} className={`px-4 py-1.5 rounded-lg font-bold text-sm ${revisionStage===stage?'bg-blue-600 text-white':'text-slate-500'}`}>{stage==='二改'?'二改 (抽查)':stage}</button>)}
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <label className="font-bold text-sm">级任班:
+              <select value={selectedFormClass} onChange={handleFormClassChange} className="ml-1 border-2 rounded-xl px-3 py-2 bg-white">
+                <option value="">- 选择 -</option>{availableFormClasses.map(x=><option key={x}>{x}</option>)}
+              </select>
+            </label>
+            <label className="font-bold text-sm">母语班:
+              <select value={student.mtl} onChange={handleMTClassChange} disabled={!selectedFormClass} className="ml-1 border-2 rounded-xl px-3 py-2 bg-white disabled:bg-slate-100">
+                <option value="">- 选择 -</option>{availableMTClasses.map(x=><option key={x}>{x}</option>)}
+              </select>
+            </label>
+            <label className="font-bold text-sm">学生:
+              <select value={student.name} onChange={handleStudentSelect} disabled={!student.mtl} className="ml-1 w-56 border-2 rounded-xl px-3 py-2 bg-white text-blue-700 disabled:bg-slate-100">
+                <option value="">- 选择 -</option>{filteredStudents.map((s,i)=><option key={i} value={s.name}>{s.name}</option>)}
+              </select>
+            </label>
+            <label className="font-bold text-sm text-purple-700">评卷老师 ({revisionStage}):
+              <select value={currentExaminer} onChange={handleExaminerChange} className="ml-1 border-2 border-purple-200 rounded-xl px-3 py-2 bg-purple-50 text-purple-800">
+                <option value="">- 选择 -</option>{examinersList.map(x=><option key={x}>{x}</option>)}
+              </select>
+            </label>
+          </div>
+        </div>
+        <div className="flex items-center gap-5">
+          <div className="text-center"><div className="text-xs font-bold text-slate-500">内容</div><div className="font-black text-xl text-indigo-600">{contentTotal}<span className="text-sm text-slate-400">/7</span></div></div>
+          <div className="text-center"><div className="text-xs font-bold text-slate-500">表达</div><div className="font-black text-xl text-indigo-600">{languageTotal}<span className="text-sm text-slate-400">/8</span></div></div>
+          <div className="text-center px-6 py-2 rounded-2xl bg-blue-600 text-white shadow"><div className="text-xs font-bold">{revisionStage}得分</div><div className="font-black text-3xl">{grandTotal}<span className="text-sm">/15</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    {student.name && (record1 || record2) && <div className="mb-8 no-print bg-white border-2 border-slate-200 rounded-3xl p-6 shadow-sm">
+      <h4 className="font-black text-lg mb-3">📊 已提交的批改记录 ({student.name})</h4>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
+        <div className="bg-slate-50 p-4 rounded-2xl"><div className="text-xs font-bold text-slate-500">一改 ({record1?.marker||'未记录'})</div><div className="text-xl font-black">{record1?`${record1.content}+${record1.language}=${record1.score}分`:'未提交'}</div></div>
+        <div className="bg-slate-50 p-4 rounded-2xl"><div className="text-xs font-bold text-slate-500">二改 ({record2?.marker||'未记录'})</div><div className="text-xl font-black">{record2?`${record2.content}+${record2.language}=${record2.score}分`:'未提交'}</div></div>
+      </div>
+    </div>}
+
+    <div className="print-only print-container">
+      <h1 className="text-3xl font-black text-center mb-6">✍️ 雅德小学三年级华文写作反馈单 ✍️</h1>
+      <div className="text-center text-lg mb-8">级任班：<b>{student.class}</b>　母语班：<b>{student.mtl}</b>　学生：<b>{student.name}</b>　评卷老师：<b>{currentExaminer}</b></div>
+      <div className="flex justify-center gap-4 mb-8 text-center">
+        <div className="p-4 border-2 rounded-2xl w-36"><b>内容</b><div className="text-3xl font-black">{contentTotal}/7</div></div>
+        <div className="p-4 border-2 rounded-2xl w-36"><b>表达</b><div className="text-3xl font-black">{languageTotal}/8</div></div>
+        <div className="p-4 border-4 border-emerald-200 bg-emerald-50 rounded-2xl w-40"><b>总分</b><div className="text-4xl font-black text-emerald-800">{grandTotal}/15</div></div>
+      </div>
+      <h2 className="text-xl font-black mb-3">老师评估评语：</h2>
+      <div className="border-2 rounded-2xl p-6 text-lg whitespace-pre-wrap min-h-[150px]">{feedbackText}</div>
+    </div>
+
+    <div className="no-print">
+      <h2 className="text-2xl font-black mb-6 px-4 border-l-8 border-blue-600">第一部分：内容 (7分)</h2>
+      {renderRubricRow('content',writingRubrics.content)}
+      <h2 className="text-2xl font-black mb-6 px-4 border-l-8 border-indigo-600">第二部分：表达 (8分)</h2>
+      {renderRubricRow('language',writingRubrics.language)}
+
+      <div className="mt-12 p-6 md:p-8 rounded-3xl border-2 shadow-sm bg-blue-50/50 border-blue-100">
+        <h3 className="font-black text-xl md:text-2xl mb-4">📝 综合评估评语预览</h3>
+        <textarea value={feedbackText} onChange={e=>setFeedbackText(e.target.value)} className="w-full h-48 p-6 rounded-2xl border-2 border-blue-200 text-lg leading-relaxed" />
+        <div className="flex flex-col md:flex-row justify-between gap-4 mt-7 pt-6 border-t">
+          <button onClick={()=>setDialog({isOpen:true,title:'确认清空',message:'确定要清空当前分数，准备给下一位学生打分吗？',type:'confirm',onConfirm:clearScores})} className="px-6 py-3 rounded-xl bg-white border-2 font-bold">🔄 清空重置</button>
+          <div className="flex gap-3">
+            <button onClick={handlePrint} className="px-6 py-3 rounded-xl bg-white border-2 font-bold">🖨️ 打印/保存 PDF</button>
+            <button onClick={()=>handleSubmitGAS(false)} disabled={submitStatus==='loading'} className="px-8 py-3 rounded-xl bg-indigo-600 text-white font-black shadow">{submitStatus==='loading'?'☁️ 提交中...':'☁️ 提交云端表格'}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
