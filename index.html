@@ -1111,7 +1111,7 @@ function App() {
   const [scores,setScores] = useState({content:'',language:''});
   const [scoreTouched,setScoreTouched] = useState({content:false,language:false});
   const [selections,setSelections] = useState({content:null,language:null});
-  const [currentExaminer,setCurrentExaminer] = useState(localStorage.getItem('p3WritingMarker') || '');
+  const [currentExaminer,setCurrentExaminer] = useState('');
   const [feedbackText,setFeedbackText] = useState('');
   const [lastAutoText,setLastAutoText] = useState('');
   const [submitStatus,setSubmitStatus] = useState('idle');
@@ -1222,7 +1222,6 @@ function App() {
 
   const handleExaminerChange=e=>{
     setCurrentExaminer(e.target.value);
-    localStorage.setItem('p3WritingMarker',e.target.value);
   };
 
   const sleep=ms=>new Promise(r=>setTimeout(r,ms));
