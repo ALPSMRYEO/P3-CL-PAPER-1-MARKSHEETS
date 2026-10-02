@@ -1108,6 +1108,45 @@ function App() {
   const record1 = currentHistory['一改'];
   const record2 = currentHistory['二改'];
 
+  // Final-mark rule:
+  // Use 一改 only when total difference <= 2 AND both components stay in the same band.
+  // Otherwise use 二改.
+  const finalDecision = useMemo(() => {
+    if (!record1 || !record2) return null;
+
+    const diff = Math.abs(Number(record1.score) - Number(record2.score));
+    const contentSameBand =
+      getBandLevel('content', record1.content) === getBandLevel('content', record2.content);
+    const languageSameBand =
+      getBandLevel('language', record1.language) === getBandLevel('language', record2.language);
+
+    const useFirst = diff <= 2 && contentSameBand && languageSameBand;
+    const chosen = useFirst ? record1 : record2;
+    const stage = useFirst ? '一改' : '二改';
+
+    let reason = '';
+    if (useFirst) {
+      reason = '总分差距在2分以内，各分项等级一致 → 采用一改';
+    } else if (diff > 2) {
+      reason = '总分差距超过2分 → 采用二改';
+    } else {
+      const changed = [];
+      if (!contentSameBand) changed.push('内容等级不同');
+      if (!languageSameBand) changed.push('表达等级不同');
+      reason = changed.join('、') + ' → 采用二改';
+    }
+
+    return {
+      stage,
+      score: Number(chosen.score),
+      content: Number(chosen.content),
+      language: Number(chosen.language),
+      marker: chosen.marker || '',
+      difference: diff,
+      reason
+    };
+  }, [record1, record2]);
+
   const loadHistory = async (s) => {
     if(!s?.name || !GAS_URL.startsWith('https://script.google.com/')) return;
     try {
@@ -1344,12 +1383,29 @@ function App() {
     </div>
 
     {student.name && (record1 || record2) && <div className="mb-8 no-print bg-white border-2 border-slate-200 rounded-3xl p-6 shadow-sm">
-      <h4 className="font-black text-lg mb-3">📊 已提交的批改记录 ({student.name})</h4>
+      <h4 className="font-black text-lg mb-4">📊 已提交的批改记录 ({student.name})</h4>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
-        <div className="bg-slate-50 p-4 rounded-2xl"><div className="text-xs font-bold text-slate-500">一改 ({record1?.marker||'未记录'})</div><div className="text-xl font-black">{record1?`${record1.content}+${record1.language}=${record1.score}分`:'未提交'}</div></div>
-        <div className="bg-slate-50 p-4 rounded-2xl"><div className="text-xs font-bold text-slate-500">二改 ({record2?.marker||'未记录'})</div><div className="text-xl font-black">{record2?`${record2.content}+${record2.language}=${record2.score}分`:'未提交'}</div></div>
+        <div className={`p-4 rounded-2xl border-2 ${finalDecision?.stage==='一改' ? 'bg-emerald-50 border-emerald-500 ring-4 ring-emerald-100' : 'bg-slate-50 border-slate-200'}`}>
+          <div className="text-xs font-bold text-slate-500">一改 ({record1?.marker||'未记录'})</div>
+          <div className="text-xl font-black">{record1?`${record1.content}+${record1.language}=${record1.score}分`:'未提交'}</div>
+          {finalDecision?.stage==='一改' && <div className="mt-2 inline-block px-3 py-1 rounded-full bg-emerald-600 text-white text-xs font-black">✓ 最终采用</div>}
+        </div>
+        <div className={`p-4 rounded-2xl border-2 ${finalDecision?.stage==='二改' ? 'bg-emerald-50 border-emerald-500 ring-4 ring-emerald-100' : 'bg-slate-50 border-slate-200'}`}>
+          <div className="text-xs font-bold text-slate-500">二改 ({record2?.marker||'未记录'})</div>
+          <div className="text-xl font-black">{record2?`${record2.content}+${record2.language}=${record2.score}分`:'未提交'}</div>
+          {finalDecision?.stage==='二改' && <div className="mt-2 inline-block px-3 py-1 rounded-full bg-emerald-600 text-white text-xs font-black">✓ 最终采用</div>}
+        </div>
       </div>
-    </div>}
+      {finalDecision && <div className="mt-5 bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-5">
+        <div className="font-black text-emerald-900 text-lg">
+          最终成绩：{finalDecision.score}/15（采用{finalDecision.stage} · {finalDecision.marker}）
+        </div>
+        <div className="text-sm font-bold text-emerald-800 mt-1">
+          内容 {finalDecision.content}/7　表达 {finalDecision.language}/8
+        </div>
+        <div className="text-sm text-emerald-800 mt-2">{finalDecision.reason}</div>
+      </div>}
+    </div>
 
     <div className="print-only print-container">
       <h1 className="text-3xl font-black text-center mb-6">✍️ 雅德小学三年级华文写作反馈单 ✍️</h1>
