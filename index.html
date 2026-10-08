@@ -21,7 +21,7 @@ body{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 </style>
 </head>
 <body class="bg-yellow-50 text-slate-900 font-sans min-h-screen pb-24 text-base">
-<div id="root"><div style="max-width:760px;margin:80px auto;padding:28px;font-family:Arial,sans-serif;background:white;border:1px solid #ddd;border-radius:16px"><b>Loading P3 EYE CL Paper 1…</b><br><span style="color:#666">If this message remains, refresh the page once.</span></div></div>
+<div id="root"></div>
 <script type="text/babel">
 const {useState,useEffect,useMemo} = React;
 
@@ -84,7 +84,7 @@ const writingRubrics = {
                     8
                 ],
                 "label": "上（6-8）",
-                "desc": "表达清楚、连贯；句子通顺、词语正确；汉字/拼音正确或极少错误（1-2个）；段落格式正确、标点正确或极少错误（1-2个）",
+                "desc": "表达清楚、连贯；句子通顺、词语正确；汉字/拼音正确或极少错误；段落格式正确、标点正确或极少错误",
                 "feedback": "表达清楚连贯，句子通顺，用词恰当；汉字、拼音、段落格式和标点掌握良好。"
             },
             {
@@ -984,6 +984,11 @@ const p3Roster = [
     {
         "mtClass": "3CL6",
         "formClass": "P3-I",
+        "name": "GOH ZHE RUI KAISER"
+    },
+    {
+        "mtClass": "3CL6",
+        "formClass": "P3-I",
         "name": "LEE JIA EN AVRIL"
     },
     {
@@ -1034,46 +1039,13 @@ const getBandLevel = (category, score) => {
   return item ? item.level : null;
 };
 
-function calculateFinalDecision(first, second) {
-  if (!first || !second) return null;
-
-  const diff = Math.abs(Number(first.score) - Number(second.score));
-  const sameContentBand =
-    getBandLevel('content', first.content) === getBandLevel('content', second.content);
-  const sameLanguageBand =
-    getBandLevel('language', first.language) === getBandLevel('language', second.language);
-
-  const useFirst = diff <= 2 && sameContentBand && sameLanguageBand;
-  const chosen = useFirst ? first : second;
-
-  let reason = '';
-  if (useFirst) {
-    reason = '总分差距在2分以内，各分项等级一致 → 采用一改';
-  } else if (diff > 2) {
-    reason = '总分差距超过2分 → 采用二改';
-  } else {
-    const reasons = [];
-    if (!sameContentBand) reasons.push('内容等级不同');
-    if (!sameLanguageBand) reasons.push('表达等级不同');
-    reason = reasons.join('、') + ' → 采用二改';
-  }
-
-  return {
-    stage: useFirst ? '一改' : '二改',
-    score: Number(chosen.score),
-    content: Number(chosen.content),
-    language: Number(chosen.language),
-    marker: chosen.marker || '',
-    reason: reason
-  };
-}
-
 function PasswordGate({onUnlock}) {
   const [pw,setPw] = useState('');
   const [error,setError] = useState('');
   const submit = (e) => {
     e.preventDefault();
     if (pw === ACCESS_PASSWORD) {
+      sessionStorage.setItem('p3WritingUnlocked','yes');
       onUnlock();
     } else {
       setError('密码不正确，请重试。');
@@ -1099,14 +1071,14 @@ function PasswordGate({onUnlock}) {
 }
 
 function App() {
-  const [unlocked,setUnlocked] = useState(false);
+  const [unlocked,setUnlocked] = useState(sessionStorage.getItem('p3WritingUnlocked') === 'yes');
   const [revisionStage,setRevisionStage] = useState('一改');
   const [selectedFormClass,setSelectedFormClass] = useState('');
   const [student,setStudent] = useState({class:'',mtl:'',name:''});
   const [scores,setScores] = useState({content:'',language:''});
   const [scoreTouched,setScoreTouched] = useState({content:false,language:false});
   const [selections,setSelections] = useState({content:null,language:null});
-  const [currentExaminer,setCurrentExaminer] = useState('');
+  const [currentExaminer,setCurrentExaminer] = useState(localStorage.getItem('p3WritingMarker') || '');
   const [feedbackText,setFeedbackText] = useState('');
   const [lastAutoText,setLastAutoText] = useState('');
   const [submitStatus,setSubmitStatus] = useState('idle');
@@ -1135,7 +1107,45 @@ function App() {
   const currentHistory = history[studentKey] || {};
   const record1 = currentHistory['一改'];
   const record2 = currentHistory['二改'];
-  const finalDecision = calculateFinalDecision(record1, record2);
+
+  // Final-mark rule:
+  // Use 一改 only when total difference <= 2 AND both components stay in the same band.
+  // Otherwise use 二改.
+  const finalDecision = useMemo(() => {
+    if (!record1 || !record2) return null;
+
+    const diff = Math.abs(Number(record1.score) - Number(record2.score));
+    const contentSameBand =
+      getBandLevel('content', record1.content) === getBandLevel('content', record2.content);
+    const languageSameBand =
+      getBandLevel('language', record1.language) === getBandLevel('language', record2.language);
+
+    const useFirst = diff <= 2 && contentSameBand && languageSameBand;
+    const chosen = useFirst ? record1 : record2;
+    const stage = useFirst ? '一改' : '二改';
+
+    let reason = '';
+    if (useFirst) {
+      reason = '总分差距在2分以内，各分项等级一致 → 采用一改';
+    } else if (diff > 2) {
+      reason = '总分差距超过2分 → 采用二改';
+    } else {
+      const changed = [];
+      if (!contentSameBand) changed.push('内容等级不同');
+      if (!languageSameBand) changed.push('表达等级不同');
+      reason = changed.join('、') + ' → 采用二改';
+    }
+
+    return {
+      stage,
+      score: Number(chosen.score),
+      content: Number(chosen.content),
+      language: Number(chosen.language),
+      marker: chosen.marker || '',
+      difference: diff,
+      reason
+    };
+  }, [record1, record2]);
 
   const loadHistory = async (s) => {
     if(!s?.name || !GAS_URL.startsWith('https://script.google.com/')) return;
@@ -1172,20 +1182,6 @@ function App() {
     setSelections({content:null,language:null});
     setFeedbackText('');
     setLastAutoText('');
-  };
-
-  const resetForNextStudent = () => {
-    // Clear the working screen only; submitted Google Sheet records are untouched.
-    setRevisionStage('一改');
-    setSelectedFormClass('');
-    setStudent({class:'',mtl:'',name:''});
-    setCurrentExaminer('');
-    setScores({content:'',language:''});
-    setScoreTouched({content:false,language:false});
-    setSelections({content:null,language:null});
-    setFeedbackText('');
-    setLastAutoText('');
-    setSubmitStatus('idle');
   };
 
   const handleSelect = (category,itemIndex,score) => {
@@ -1231,6 +1227,7 @@ function App() {
 
   const handleExaminerChange=e=>{
     setCurrentExaminer(e.target.value);
+    localStorage.setItem('p3WritingMarker',e.target.value);
   };
 
   const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -1388,20 +1385,24 @@ function App() {
     {student.name && (record1 || record2) && <div className="mb-8 no-print bg-white border-2 border-slate-200 rounded-3xl p-6 shadow-sm">
       <h4 className="font-black text-lg mb-4">📊 已提交的批改记录 ({student.name})</h4>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
-        <div className={finalDecision && finalDecision.stage === '一改' ? 'p-4 rounded-2xl border-2 bg-emerald-50 border-emerald-500 ring-4 ring-emerald-100' : 'p-4 rounded-2xl border-2 bg-slate-50 border-slate-200'}>
-          <div className="text-xs font-bold text-slate-500">一改 ({record1 ? (record1.marker || '未记录') : '未记录'})</div>
-          <div className="text-xl font-black">{record1 ? (record1.content + '+' + record1.language + '=' + record1.score + '分') : '未提交'}</div>
-          {finalDecision && finalDecision.stage === '一改' && <div className="mt-2 inline-block px-3 py-1 rounded-full bg-emerald-600 text-white text-xs font-black">✓ 最终采用</div>}
+        <div className={`p-4 rounded-2xl border-2 ${finalDecision?.stage==='一改' ? 'bg-emerald-50 border-emerald-500 ring-4 ring-emerald-100' : 'bg-slate-50 border-slate-200'}`}>
+          <div className="text-xs font-bold text-slate-500">一改 ({record1?.marker||'未记录'})</div>
+          <div className="text-xl font-black">{record1?`${record1.content}+${record1.language}=${record1.score}分`:'未提交'}</div>
+          {finalDecision?.stage==='一改' && <div className="mt-2 inline-block px-3 py-1 rounded-full bg-emerald-600 text-white text-xs font-black">✓ 最终采用</div>}
         </div>
-        <div className={finalDecision && finalDecision.stage === '二改' ? 'p-4 rounded-2xl border-2 bg-emerald-50 border-emerald-500 ring-4 ring-emerald-100' : 'p-4 rounded-2xl border-2 bg-slate-50 border-slate-200'}>
-          <div className="text-xs font-bold text-slate-500">二改 ({record2 ? (record2.marker || '未记录') : '未记录'})</div>
-          <div className="text-xl font-black">{record2 ? (record2.content + '+' + record2.language + '=' + record2.score + '分') : '未提交'}</div>
-          {finalDecision && finalDecision.stage === '二改' && <div className="mt-2 inline-block px-3 py-1 rounded-full bg-emerald-600 text-white text-xs font-black">✓ 最终采用</div>}
+        <div className={`p-4 rounded-2xl border-2 ${finalDecision?.stage==='二改' ? 'bg-emerald-50 border-emerald-500 ring-4 ring-emerald-100' : 'bg-slate-50 border-slate-200'}`}>
+          <div className="text-xs font-bold text-slate-500">二改 ({record2?.marker||'未记录'})</div>
+          <div className="text-xl font-black">{record2?`${record2.content}+${record2.language}=${record2.score}分`:'未提交'}</div>
+          {finalDecision?.stage==='二改' && <div className="mt-2 inline-block px-3 py-1 rounded-full bg-emerald-600 text-white text-xs font-black">✓ 最终采用</div>}
         </div>
       </div>
       {finalDecision && <div className="mt-5 bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-5">
-        <div className="font-black text-emerald-900 text-lg">最终成绩：{finalDecision.score}/15（采用{finalDecision.stage} · {finalDecision.marker}）</div>
-        <div className="text-sm font-bold text-emerald-800 mt-1">内容 {finalDecision.content}/7　表达 {finalDecision.language}/8</div>
+        <div className="font-black text-emerald-900 text-lg">
+          最终成绩：{finalDecision.score}/15（采用{finalDecision.stage} · {finalDecision.marker}）
+        </div>
+        <div className="text-sm font-bold text-emerald-800 mt-1">
+          内容 {finalDecision.content}/7　表达 {finalDecision.language}/8
+        </div>
         <div className="text-sm text-emerald-800 mt-2">{finalDecision.reason}</div>
       </div>}
     </div>}
@@ -1428,7 +1429,7 @@ function App() {
         <h3 className="font-black text-xl md:text-2xl mb-4">📝 综合评估评语预览</h3>
         <textarea value={feedbackText} onChange={e=>setFeedbackText(e.target.value)} className="w-full h-48 p-6 rounded-2xl border-2 border-blue-200 text-lg leading-relaxed" />
         <div className="flex flex-col md:flex-row justify-between gap-4 mt-7 pt-6 border-t">
-          <button onClick={()=>setDialog({isOpen:true,title:'确认清空',message:'确定要清空当前画面，准备给下一位学生打分吗？\n\n已提交到 Google Sheet 的记录不会被删除。',type:'confirm',onConfirm:resetForNextStudent})} className="px-6 py-3 rounded-xl bg-white border-2 font-bold">🔄 清空重置</button>
+          <button onClick={()=>setDialog({isOpen:true,title:'确认清空',message:'确定要清空当前分数，准备给下一位学生打分吗？',type:'confirm',onConfirm:clearScores})} className="px-6 py-3 rounded-xl bg-white border-2 font-bold">🔄 清空重置</button>
           <div className="flex gap-3">
             <button onClick={handlePrint} className="px-6 py-3 rounded-xl bg-white border-2 font-bold">🖨️ 打印/保存 PDF</button>
             <button onClick={()=>handleSubmitGAS(false)} disabled={submitStatus==='loading'} className="px-8 py-3 rounded-xl bg-indigo-600 text-white font-black shadow">{submitStatus==='loading'?'☁️ 提交中...':'☁️ 提交云端表格'}</button>
