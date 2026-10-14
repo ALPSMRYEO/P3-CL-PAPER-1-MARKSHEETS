@@ -69,6 +69,13 @@ const writingRubrics = {
                 "label": "下（1-2）",
                 "desc": "不符合题目要求；内容严重缺漏；条理不清楚",
                 "feedback": "内容与题目要求仍有距离，缺漏较多，需要把事情写得更完整、更有条理。"
+            },
+            {
+                "level": 4,
+                "scores": [0],
+                "label": "零（0分）",
+                "desc": "未作答；没有任何内容。",
+                "feedback": "未作答；没有任何内容。"
             }
         ]
     },
@@ -107,6 +114,13 @@ const writingRubrics = {
                 "label": "下（1-2）",
                 "desc": "表达不清楚、不连贯；多数句子不通顺、多数词语不正确；汉字/拼音错误较多；段落格式不正确、标点错误较多",
                 "feedback": "表达还不够清楚连贯，句子、词语、汉字/拼音、段落格式和标点需要进一步加强。"
+            },
+            {
+                "level": 4,
+                "scores": [0],
+                "label": "零（0分）",
+                "desc": "未作答；没有任何文字表达。",
+                "feedback": "未作答；没有任何文字表达。"
             }
         ]
     }
@@ -1309,7 +1323,7 @@ function App() {
           <span className="text-slate-500">/{rubricObj.max}</span>
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {rubricObj.items.map((item,index)=>{
           const selected=selections[categoryKey]===index;
           return <div key={index} className={`rounded-xl p-4 border-2 ${selected?'border-blue-600 bg-blue-50 ring-4 ring-blue-100':'border-slate-200'}`}>
