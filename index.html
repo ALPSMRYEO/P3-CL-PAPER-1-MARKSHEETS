@@ -1060,7 +1060,7 @@ function PasswordGate({onUnlock}) {
   const submit = (e) => {
     e.preventDefault();
     if (pw === ACCESS_PASSWORD) {
-      sessionStorage.setItem('p3WritingUnlocked','yes');
+      // Unlock for this page visit only.
       onUnlock();
     } else {
       setError('密码不正确，请重试。');
@@ -1086,14 +1086,14 @@ function PasswordGate({onUnlock}) {
 }
 
 function App() {
-  const [unlocked,setUnlocked] = useState(sessionStorage.getItem('p3WritingUnlocked') === 'yes');
+  const [unlocked,setUnlocked] = useState(false);
   const [revisionStage,setRevisionStage] = useState('一改');
   const [selectedFormClass,setSelectedFormClass] = useState('');
   const [student,setStudent] = useState({class:'',mtl:'',name:''});
   const [scores,setScores] = useState({content:'',language:''});
   const [scoreTouched,setScoreTouched] = useState({content:false,language:false});
   const [selections,setSelections] = useState({content:null,language:null});
-  const [currentExaminer,setCurrentExaminer] = useState(localStorage.getItem('p3WritingMarker') || 'CHEN JINGJING');
+  const [currentExaminer,setCurrentExaminer] = useState('');
   const [feedbackText,setFeedbackText] = useState('');
   const [lastAutoText,setLastAutoText] = useState('');
   const [submitStatus,setSubmitStatus] = useState('idle');
@@ -1242,7 +1242,7 @@ function App() {
 
   const handleExaminerChange=e=>{
     setCurrentExaminer(e.target.value);
-    localStorage.setItem('p3WritingMarker',e.target.value);
+    // Marker must be explicitly selected for each page visit.
   };
 
   const sleep=ms=>new Promise(r=>setTimeout(r,ms));
